@@ -1,0 +1,7 @@
+Rule is Object that contain 2 fields:
+- who: The User team or position that will do the survey the field accept
+  as values: 'all', the name of the team starting with `team-`
+  or the name of the position starting with `position-`
+- whom: The users whom the `who` user can rate, the field accept as values :
+  `his-position`, `his-team`, name of the position or the team starting with type
+  or `all`
