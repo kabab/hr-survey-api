@@ -64,8 +64,8 @@ function isUserSurvey(survey, user) {
   for(var i = 0; i < rules.length; i++) {
     if (rules[i].who == 'all')
       return true;
-    if (rules[i].who == "position-" + user.position.title) return true;
-    if (rules[i].who == "team-" + user.team.title) return true;
+    if (user.position && rules[i].who == "position-" + user.position.title) return true;
+    if (user.team && rules[i].who == "team-" + user.team.title) return true;
   }
   return false;
 }
