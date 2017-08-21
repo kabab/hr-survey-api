@@ -4,6 +4,7 @@ var Evaluation = require('../model/Evaluation');
 var validator = require('validator');
 var moment = require('moment');
 var async = require('async');
+var url = require('url');
 
 var surveyController = {};
 
@@ -35,14 +36,20 @@ surveyController.create = function(req, res) {
   }
 
   var survey = new Survey({
+    type: req.body.type.toLowerCase(),
     title: req.body.title,
     startAt: startAt,
     endAt: endAt,
     description: req.body.description,
     state: state,
-    createdBy: req.user.id,
-    rules: req.body.rules
+    createdBy: req.user.id
   });
+
+  if (survey.type == '360') {
+    survey.rules = req.body.rules;
+  } else {
+    survey.topics = req.body.topics;
+  }
 
   survey.save(function(err, survey) {
     if (err)
@@ -52,16 +59,24 @@ surveyController.create = function(req, res) {
 }
 
 surveyController.list = function(req, res) {
-  Survey.find({})
-        .populate({
-          path: 'createdBy',
-          select: '-password'
-        })
-        .exec(function(err, surveys) {
-          if (err)
-            return res.json(err);
-          res.json(surveys);
-  });
+  var url_parts = url.parse(req.url, true);
+  var query = url_parts.query;
+
+  var filtes = {};
+  if (query.type && /(motivation|360)/i.test(query.type)) {
+    filtes = { type: query.type.toLowerCase() }
+  }
+
+  Survey.find(filtes)
+    .populate({
+      path: 'createdBy',
+      select: '-password'
+    })
+    .exec(function(err, surveys) {
+      if (err)
+        return res.json(err);
+      res.json(surveys);
+    });
 }
 
 surveyController.stop = function(req, res) {
@@ -100,13 +115,10 @@ function checkRule(rule, users, employee) {
   var rule_type = rule.who.indexOf("team") == 0 ? "team" :
     (rule.who.indexOf("position") == 0 ? "position" : "all");
   var rule_value = rule.who.replace(rule_type + "-", "");
-  console.log(rule_type);
-  console.log(employee.position.title, rule.whom)
   if (rule_type == "all" ||
       (rule_type == "team" && rule_value == employee.team.title) ||
       (rule_type == "position" && rule_value == employee.position.title))
   {
-    console.log(employee.position.title, rule.whom);
     switch (rule.whom) {
       case "his-team":
         return users.filter((u) => u.team.title == employee.team.title);
@@ -120,7 +132,6 @@ function checkRule(rule, users, employee) {
         var rule_value = rule.who.replace(rule_type + "-", "");
         return users.filter((u) => u[rule_type].title == rule_value);
     }
-
   } else {
     return [];
   }
@@ -136,13 +147,16 @@ surveyController.users = function(req, res) {
       survey: (cb) => Survey.findById(survey_id, cb),
       users: (cb) => User.find({_id: { $ne: user_id}}).populate('team position').exec(cb)
   }, function(err, results) {
+
+    if (survey.type && survey.type == 'motivation') {
+      return res.json({type: 'error', message: 'This is a motivation survey'});
+    }
+
     var employees = [];
     var employee = results.user._doc;
     results.survey.rules.forEach(function(rule) {
       employees = employees.concat(checkRule(rule, results.users, employee));
     });
-    console.log(employee);
-    console.log(results.survey.rules);
     res.json(employees);
   })
 }

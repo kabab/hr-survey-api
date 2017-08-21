@@ -1,0 +1,514 @@
+{
+	"variables": [],
+	"info": {
+		"name": "HR",
+		"_postman_id": "d93f2b47-600e-0d9f-f4f9-483dccd4375f",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"",
+							"if (jsonData.token)",
+							"    postman.setGlobalVariable(\"token\", jsonData.token);"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "http://localhost:3000/login",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"email\": \"kabab@gmail.com\",\n\t\"password\": \"amine\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get employees",
+			"request": {
+				"url": "http://localhost:3000/employees",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"startAt\": \"2017-01-10\",\n\t\"endAt\": \"2017-01-13\",\n\t\"title\": \"Sruvey\",\n\t\"description\": \"description\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Create employee",
+			"request": {
+				"url": "http://localhost:3000/employees",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"firstName\": \"Amine\",\n\t\"lastName\": \"KABAB\",\n\t\"email\": \"kabab@hotmail.com\",\n\t\"position\": \"developer\",\n\t\"team\": \"money\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Upload CSV",
+			"request": {
+				"url": "http://localhost:3000/users/csv",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "csv",
+							"description": "",
+							"type": "file",
+							"src": "users.csv"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Survey list",
+			"request": {
+				"url": "http://localhost:3000/surveys",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"startAt\": \"2017-01-10\",\n\t\"endAt\": \"2017-08-18\",\n\t\"title\": \"Sruvey\",\n\t\"description\": \"description\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get surveys",
+			"request": {
+				"url": {
+					"raw": "http://localhost:3000/surveys?type=motivation",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"surveys"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "motivation",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"startAt\": \"2017-01-10\",\n\t\"endAt\": \"2017-01-13\",\n\t\"title\": \"Sruvey\",\n\t\"description\": \"description\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get a survey",
+			"request": {
+				"url": "http://localhost:3000/surveys/5996bce879ec483faac41394",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Stop survey",
+			"request": {
+				"url": "http://localhost:3000/surveys/5995d18f02703f33ee44f480/stop",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"startAt\": \"2017-01-10\",\n\t\"endAt\": \"2017-08-18\",\n\t\"title\": \"Sruvey\",\n\t\"description\": \"description\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Create survey 360",
+			"request": {
+				"url": "http://localhost:3000/surveys",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFtaW5lLmtAYXZpdG8ubWEiLCJmaXJzdE5hbWUiOiJhbWluZSIsImxhc3ROYW1lIjoia2FiYWIiLCJpZCI6IjU5OTk4N2JjMmU5MDlmNTFkMmQwMmRlYiIsInJvbGUiOlsiZW1wbG95ZWUiXSwiaWF0IjoxNTAzMjM0MzA1fQ.cs6ctiTyaIIrvBVGibyYHYdd9J8cMZaDROaF0AFFcPo",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"type\": \"360\",\n\t\"startAt\": \"2017-01-10\",\n\t\"endAt\": \"2017-01-13\",\n\t\"title\": \"Sruvey\",\n\t\"description\": \"description\", \n\t\"rules\": [\n\t\t{\n\t\t\t\"who\": \"team-atlas\",\n\t\t\t\"whom\": \"his-team\"\n\t\t}\n\t\t]\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update employee",
+			"request": {
+				"url": "http://localhost:3000/employees/599726c4f54e5c4898402500",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"firstName\": \"yoyo\",\n\t\"team\": \"599726b4f54e5c48984024ff\",\n\t\"position\": \"developer\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete employee",
+			"request": {
+				"url": "http://localhost:3000/employees/599726c4f54e5c4898402500",
+				"method": "DELETE",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get team",
+			"request": {
+				"url": "http://localhost:3000/teams/5998395c4f50a34aee6e03dc",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get teams",
+			"request": {
+				"url": "http://localhost:3000/teams",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "delete team",
+			"request": {
+				"url": "http://localhost:3000/teams/5998395c4f50a34aee6e03dc",
+				"method": "DELETE",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get positions",
+			"request": {
+				"url": "http://localhost:3000/positions",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"startAt\": \"2017-01-10\",\n\t\"endAt\": \"2017-01-13\",\n\t\"title\": \"Sruvey\",\n\t\"description\": \"description\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get position",
+			"request": {
+				"url": "http://localhost:3000/positions/599726b4f54e5c48984024fe",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"startAt\": \"2017-01-10\",\n\t\"endAt\": \"2017-01-13\",\n\t\"title\": \"Sruvey\",\n\t\"description\": \"description\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "delete position",
+			"request": {
+				"url": "http://localhost:3000/positions/599726b4f54e5c48984024fe",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"startAt\": \"2017-01-10\",\n\t\"endAt\": \"2017-01-13\",\n\t\"title\": \"Sruvey\",\n\t\"description\": \"description\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get users who can rate",
+			"request": {
+				"url": "http://localhost:3000/surveys/59998eb357c6c1525005af57/users",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFtaW5lLmtAYXZpdG8ubWEiLCJmaXJzdE5hbWUiOiJhbWluZSIsImxhc3ROYW1lIjoia2FiYWIiLCJpZCI6IjU5OTk4N2JjMmU5MDlmNTFkMmQwMmRlYiIsInJvbGUiOlsiZW1wbG95ZWUiXSwiaWF0IjoxNTAzMjM0MzA1fQ.cs6ctiTyaIIrvBVGibyYHYdd9J8cMZaDROaF0AFFcPo",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"startAt\": \"2017-01-10\",\n\t\"endAt\": \"2017-01-13\",\n\t\"title\": \"Sruvey\",\n\t\"description\": \"description\", \n\t\"rules\": [\n\t\t{\n\t\t\t\"who\": \"team-atlas\",\n\t\t\t\"whom\": \"his-team\"\n\t\t}\n\t\t]\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete rule in survey",
+			"request": {
+				"url": "http://localhost:3000/surveys/59998eb357c6c1525005af57/rules/59998eb357c6c1525005af58",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Add rule to survey",
+			"request": {
+				"url": "http://localhost:3000/surveys/59998eb357c6c1525005af57/rules",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"who\": \"all\",\n\t\"whom\": \"his-position\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Rate a user",
+			"request": {
+				"url": "http://localhost:3000/surveys/59998eb357c6c1525005af57/rate",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"employee\": \"599987bc2e909f51d2d02dec\",\n\t\"rate\": 2,\n\t\"rateCategory\": \"PERFORMANCE\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Create motivation survey",
+			"request": {
+				"url": "http://localhost:3000/surveys",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFtaW5lLmtAYXZpdG8ubWEiLCJmaXJzdE5hbWUiOiJhbWluZSIsImxhc3ROYW1lIjoia2FiYWIiLCJpZCI6IjU5OTk4N2JjMmU5MDlmNTFkMmQwMmRlYiIsInJvbGUiOlsiZW1wbG95ZWUiXSwiaWF0IjoxNTAzMjM0MzA1fQ.cs6ctiTyaIIrvBVGibyYHYdd9J8cMZaDROaF0AFFcPo",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"type\": \"motivation\",\n\t\"startAt\": \"2017-01-10\",\n\t\"endAt\": \"2017-01-13\",\n\t\"title\": \"Sruvey\",\n\t\"description\": \"description\", \n\t\"topics\":[\n          {\n            \"name\":\"innovation\",\n            \"questions\": [\n              {\n                \"name\": \"do you like you current job ?\",\n                \"responses\": [\n                  { \"text\": \"yes i do\", \"weight\": 1 },\n                  { \"text\": \"kind of\", \"weight\": 0 },\n                  { \"text\": \"at all\", \"weight\": -1 }\n                ]\n              },\n              {\n                \"name\": \"the relation with your manager\",\n                \"responses\": [\n                  { \"text\": \"good\", \"weight\": 1 },\n                  { \"text\": \"meh\", \"weight\": 0 },\n                  { \"text\": \"terrible\", \"weight\": -1 }\n                ]\n              }\n            ]\n          }\n      ]\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
