@@ -5,9 +5,19 @@ var async = require('async');
 PositionController = {};
 
 PositionController.list = function(req, res) {
-  Position.find({}, function(err, positions) {
+  async.parallel({
+    users: (cb) => User.find({}, cb),
+    positions: (cb) => Position.find({}, cb)
+  }, function(err, results) {
     if (err)
       return res.json(err);
+    var positions = results.positions;
+    var users = results.users;
+    var positions = positions.map((position) => 
+      Object.assign({}, position._doc, {
+        users: users.filter( u => u.position == position._id.toString())
+      })
+    );
     return res.json(positions);
   });
 }

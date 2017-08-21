@@ -5,9 +5,19 @@ var async = require('async');
 TeamController = {};
 
 TeamController.list = function(req, res) {
-  Team.find({}, function(err, teams) {
+  async.parallel({
+    users: (cb) => User.find({}, cb),
+    teams: (cb) => Team.find({}, cb)
+  }, function(err, results) {
     if (err)
       return res.json(err);
+    var teams = results.teams;
+    var users = results.users;
+    var teams = teams.map((team) => 
+      Object.assign({}, team._doc, {
+        users: users.filter( u => u.team == team._id.toString())
+      })
+    );
     return res.json(teams);
   });
 }
