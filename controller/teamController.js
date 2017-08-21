@@ -40,4 +40,13 @@ TeamController.delete = function(req, res) {
 
 }
 
+TeamController.create = function(req, res) {
+  var team = new Team(req.body);
+  team.save(function(err, team) {
+    if (err)
+      return res.json(err)
+    return res.json(team)
+  });
+}
+
 module.exports = TeamController;

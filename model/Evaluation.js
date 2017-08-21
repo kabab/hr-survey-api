@@ -8,7 +8,8 @@ var RateSchema = new Schema({
     max: [10, 'Maximum rating is 10']
   },
   rateCategory: String,
-  employee: {type: Schema.Types.ObjectId, ref: 'User'}
+  employee: {type: Schema.Types.ObjectId, ref: 'User'},
+  comment: String
 });
 
 var EvaluationSchema = new Schema({

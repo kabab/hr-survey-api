@@ -7,5 +7,7 @@ var positionCtrl = require('../controller/positionController');
 router.get('/', positionCtrl.list);
 router.get('/:id', positionCtrl.get);
 router.delete('/:id', positionCtrl.delete);
+router.post('/', positionCtrl.create);
+
 
 module.exports = router;

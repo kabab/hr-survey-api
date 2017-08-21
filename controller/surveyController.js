@@ -221,9 +221,10 @@ surveyController.rateUser = function(req, res) {
       }, function(evaluation, cb) {
         var rate = evaluation.ratings.filter( (r) => r.employee == req.body.employee
                                               && r.rateCategory == req.body.rateCategory);
-        console.log(evaluation);
+
         if (rate.length == 1) {
           evaluation.ratings.id(rate[0]._id).rate = req.body.rate;
+          evaluation.ratings.id(rate[0]._id).comment = req.body.comment;
         } else {
           evaluation.ratings.push(req.body);
         }

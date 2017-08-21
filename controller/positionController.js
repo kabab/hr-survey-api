@@ -37,7 +37,15 @@ PositionController.delete = function(req, res) {
       return res.json(err);
     return res.sendStatus(200);
   })
+}
 
+PositionController.create = function(req, res) {
+  var position = new Position(req.body);
+  position.save(function(err, position) {
+    if (err)
+      return res.json(err)
+    return res.json(position)
+  });
 }
 
 module.exports = PositionController;
