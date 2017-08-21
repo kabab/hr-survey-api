@@ -41,7 +41,7 @@ var SurveySchema = new Schema({
   evaluations: [{ type: Schema.Types.ObjectId, ref: 'Evaluation' }],
   createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
   rules: [RuleSchema],
-  topics: [TopicSchema]
+  topics: [TopicSchema],
 });
 
 module.exports = mongoose.model('Survey', SurveySchema);

@@ -76,6 +76,8 @@ var createOrGet = (user, field, value, Model, cb) => {
         }
       });
     }
+  } else {
+    cb(null, null);
   }
 }
 
@@ -161,7 +163,7 @@ userController.createEmployee = function(req, res) {
     role: [ROLE_EMPLOYEE]
   });
 
-  async.series([
+  async.parallel([
     (cb) => createOrGet(user, 'position', req.body.position, Position, cb),
     (cb) => createOrGet(user, 'team', req.body.team, Team, cb)
   ], function() {
@@ -187,6 +189,7 @@ userController.updateEmployee = function(req, res) {
     employee.firstName = req.body.firstName || employee.firstName;
     employee.lastName = req.body.lastName || employee.lastName;
     employee.email = req.body.email || employee.email;
+    employee.password = req.body.password || employee.password;
 
     async.parallel([
         (cb) => req.body.position ?
@@ -200,6 +203,7 @@ userController.updateEmployee = function(req, res) {
       employee.save(function(err, employee) {
         if (err)
           return res.json(err);
+        employee.password = null;
         return res.json(employee);
       });
     });

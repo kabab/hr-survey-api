@@ -5,6 +5,7 @@ var validator = require('validator');
 var moment = require('moment');
 var async = require('async');
 var url = require('url');
+var Result = require('../model/Result');
 
 var surveyController = {};
 
@@ -58,16 +59,29 @@ surveyController.create = function(req, res) {
   })
 }
 
+function isUserSurvey(survey, user) {
+  var rules = survey.rules;
+  for(var i = 0; i < rules.length; i++) {
+    if (rules[i].who == 'all')
+      return true;
+    if (rules[i].who == "position-" + user.position.title) return true;
+    if (rules[i].who == "team-" + user.team.title) return true;
+  }
+  return false;
+}
+
 surveyController.list = function(req, res) {
   var url_parts = url.parse(req.url, true);
   var query = url_parts.query;
 
-  var filtes = {};
+  var user = req.user;
+  console.log(user);
+  var filter = {};
   if (query.type && /(motivation|360)/i.test(query.type)) {
-    filtes = { type: query.type.toLowerCase() }
+    filter = { type: query.type.toLowerCase() }
   }
 
-  Survey.find(filtes)
+  Survey.find(filter)
     .populate({
       path: 'createdBy',
       select: '-password'
@@ -75,7 +89,19 @@ surveyController.list = function(req, res) {
     .exec(function(err, surveys) {
       if (err)
         return res.json(err);
-      res.json(surveys);
+
+      if ((filter.hasOwnProperty("type")
+        && filter["type"] == 'motivation')
+        || user.role.indexOf('admin') >= 0) {
+        return res.json(surveys);
+      }
+
+      User.findById(user.id).populate('team position').exec(function(err, user) {
+        if (err) return res.json(err);
+        console.log(user);
+        surveys = surveys.filter((s) => isUserSurvey(s, user) || s.type == 'motivation')
+        return res.json(surveys)
+      });
     });
 }
 
@@ -147,7 +173,7 @@ surveyController.users = function(req, res) {
       survey: (cb) => Survey.findById(survey_id, cb),
       users: (cb) => User.find({_id: { $ne: user_id}}).populate('team position').exec(cb)
   }, function(err, results) {
-
+    var survey = results.survey;
     if (survey.type && survey.type == 'motivation') {
       return res.json({type: 'error', message: 'This is a motivation survey'});
     }
@@ -193,20 +219,24 @@ surveyController.rateUser = function(req, res) {
   var survey_id = req.params.id;
   var user_id = req.user.id;
 
+  var _survey = null;
+
   async.waterfall([
       function(cb) {
         Survey.findById(survey_id, function(err, survey) { // Get Survey
           if (survey)
             return cb(null, survey);
-          return cb(err, null);
+          cb({'error': true, message: "Survey not found"}, null);
         })
       }, function(survey, cb) { // Check if the survey contains the evaluation
+        // TODO: make this better, I know it's ugly
+        _survey = survey;
         Evaluation.findOne({ employee: user_id }, function(err, evaluation) {
           if (evaluation) {
             if (survey.evaluations.indexOf(evaluation._id))
               return cb(null, evaluation);
             else
-              return cb(null, null);
+              return cb(null, evaluation);
           }
           return cb(err, null);
         })
@@ -233,8 +263,59 @@ surveyController.rateUser = function(req, res) {
   ], function(err, results) {
     if (err)
       return res.json(err);
-    return res.json(results);
+    if (_survey.evaluations.indexOf(results._id) < 0) {
+      _survey.evaluations.push(results._id);
+      _survey.save(function(err, s) {
+        if (err)
+          return res.json(err);
+        return res.json(results);
+      });
+    } else {
+      return res.json(results);
+    }
   })
+}
+
+
+surveyController.getRatings = function(req, res) {
+  var survey_id = req.params.id;
+  var user_id = req.user.id;
+
+  Survey.findById(survey_id).populate("evaluations").exec(function(err, survey) {
+    if (err)
+      return res.json(err);
+    survey.evaluations = survey.evaluations.filter((e) => e.employee == user_id);
+    return res.json(survey);
+  })
+}
+
+surveyController.result = function(req, res) {
+  var survey_id = req.params.id;
+  var user = req.user;
+
+  async.series([
+    (cb) => Survey.findOne({ _id: survey_id, type: 'motivation'}, function(err, survey) {
+      if (err) return cb(err, null);
+      if (!survey) return cb('Survey not found', null);
+      return cb(null, survey);
+    }),
+    function(cb) {
+      Result.findOne({  survey: survey_id,  employee: user.id }, function(err, res) {
+        if (res) return cb({error: true, message: "Already submitted survey"}, null);
+        else cb(null, 'not found')
+      })
+    }
+  ], function(err, result) {
+    if (err) return res.json(err);
+    var result = new Result(req.body);
+    result.survey = survey_id;
+    result.employee = user.id;
+
+    result.save(function(err, result) {
+      if (err) return res.json(err);
+      return res.json(result);
+    });
+  });
 }
 
 module.exports = surveyController;

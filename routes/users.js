@@ -7,7 +7,7 @@ var upload = multer({ dest: `csv` })
 
 /* GET users listing. */
 router.post('/users', userCtrl.create);
-// router.post('/login', userCtrl.login);
+router.post('/login', userCtrl.login);
 
 router.post('/users/csv', upload.single('csv'), userCtrl.uploadCSV);
 router.get('/employees', userCtrl.getEmployees);

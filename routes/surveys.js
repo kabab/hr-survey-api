@@ -14,4 +14,9 @@ router.post('/:id/rules', jwt, surveyCtrl.addRule);
 
 router.post('/:id/rate', jwt, surveyCtrl.rateUser);
 
+
+router.get('/:id/ratings', jwt, surveyCtrl.getRatings);
+
+router.post('/:id/result', jwt, surveyCtrl.result);
+
 module.exports = router;
