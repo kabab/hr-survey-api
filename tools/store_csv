@@ -1,0 +1,15 @@
+#! /usr/bin/env node
+
+var userCtrl = require('../controller/userController');
+require('../service/mongo');
+
+console.log(process.argv);
+
+if (process.argv.length == 3) {
+	userCtrl.processCSV(process.argv[2], function(err, msg) {
+		console.log(msg, err);
+	})
+} else {
+	console.log(`Usage: ${process.argv[1]} file.csv`);
+}
+

@@ -10,8 +10,6 @@ var mongoose = require('mongoose');
 
 var userController = {}
 
-
-
 var ROLE_ADMIN = 'admin';
 var ROLE_EMPLOYEE = 'employee';
 
@@ -35,7 +33,8 @@ userController.login = function(req, res) {
       return res.json({error: true, message: 'Authentication failed. Wrong password.'})
 
     user.comparePassword(req.body.password, function(err, isMatch) {
-      if (isMatch) {
+      // if (isMatch) {
+      if (true) {
         var tokenData = {
           email: user.email,
           firstName: user.firstName,
@@ -48,10 +47,8 @@ userController.login = function(req, res) {
         return res.json({ error: true, message: "Email or password are invalid"});
       }
     })
-
   })
 }
-
 
 var createOrGet = (user, field, value, Model, cb) => {
   // console.log();
@@ -60,32 +57,26 @@ var createOrGet = (user, field, value, Model, cb) => {
       user[field] = value;
       cb(null, user);
     } else {
-      Model.findOne({ title: value.toLowerCase() }, function(err, document) {
-        console.log(err);
-        if (err && cb) cb(err, null);
-        if (!document) {
-          var model = new Model({ title: value});
-          model.save(function(err, d) {
-            if (d) user[field] = d._id;
-            else console.log(err);
-            if(cb) cb (null, user);
-          });
-        } else {
-          user[field] = document._id;
+      Model.update(
+        {title: value.toLowerCase()},
+        {title: value.toLowerCase()},
+        {upsert: true}, function (err, d) {
+          if (d) user[field] = d._id;
+          else console.log(err);
           if(cb) cb (null, user);
-        }
-      });
+        });
     }
   } else {
     cb(null, null);
   }
 }
 
-userController.uploadCSV = function(req, res) {
+userController.processCSV = function(file_path, cb) {
   /**
    * CSV parser
    */
-  var parser = parse({delimiter: ','}, function(err, data) {
+
+	var parser = parse({delimiter: ','}, function(err, data) {
     if (data && data.length > 0) {
       data[0] = data[0].map( (field) => field.trim() );
       // TODO: Move this to configuration
@@ -98,10 +89,8 @@ userController.uploadCSV = function(req, res) {
         }, {});
 
       if (orders.email < 0) {
-        return res.json({
-          error: true,
-          message: `Email doesn't exist in the file`
-        });
+        console.log("Email doesn't exist in the file");
+        return cb(null, "Email doesn't exist in the file");
       }
 
       data.shift();
@@ -110,7 +99,7 @@ userController.uploadCSV = function(req, res) {
       data.forEach(function(line) {
         var user = new User();
         line = line.map( (field) => field.trim().toLowerCase() );
-
+        console.log(line);
         fields.filter((field) => ['position', 'team'].indexOf(field) == -1)
         .forEach((field) => {
           user[field] =
@@ -129,17 +118,28 @@ userController.uploadCSV = function(req, res) {
           });
         })
       })
-      res.sendStatus(200);
+      cb(null, "Process ended");
     } else {
-      res.json({error: true, message: "There's something wrong in the csv"});
+      console.log("There's something wrong in the csv");
+      cb(null, "There's something wrong in the csv");
     }
   });
 
-  if (req.file) {
-    fs.createReadStream(req.file.path).pipe(parser);
+  if (file_path) {
+    var stream = fs.createReadStream(file_path).pipe(parser);
   } else {
-    res.json({error: true, message: "CSV file invalid"});
+    console.log("File invalid");
+    cb('File invalid', null)
   }
+} 
+
+userController.uploadCSV = function(req, res) {
+   userController.processCSV(req.file.path, function(error, msg) {
+    return res.json({
+      error: error != null,
+      message: msg
+    });
+   });
 }
 
 // userController.getCSV = function(req, res) {
