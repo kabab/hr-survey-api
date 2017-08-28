@@ -15,6 +15,7 @@ var Answer = new Schema({
 var ResultSchema = new Schema({
   survey: {type: Schema.Types.ObjectId, ref: 'Survey', required: true},
   answers: [Answer],
+  comment: String,
   employee: {type: Schema.Types.ObjectId, ref: 'User', required: true}
 });
 
