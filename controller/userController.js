@@ -61,9 +61,10 @@ var createOrGet = (user, field, value, Model, cb) => {
         {title: value.toLowerCase()},
         {title: value.toLowerCase()},
         {upsert: true}, function (err, d) {
-          if (d) user[field] = d._id;
-          else console.log(err);
-          if(cb) cb (null, user);
+          Model.findOne({title: value.toLowerCase()}, function(err, d) {
+            if (d) user[field] = d._id
+            if (cb) cb (null, user)
+          });
         });
     }
   } else {
@@ -97,6 +98,10 @@ userController.processCSV = function(file_path, cb) {
 
       // Save users
       data.forEach(function(line) {
+        
+      })
+
+      async.each(data, function(line, cb) {
         var user = new User();
         line = line.map( (field) => field.trim().toLowerCase() );
         console.log(line);
@@ -108,7 +113,7 @@ userController.processCSV = function(file_path, cb) {
         });
 
         user.role = [ROLE_EMPLOYEE];
-        async.series([
+        async.parallel([
           (cb) => createOrGet(user, 'position', line[orders.position], Position, cb),
           (cb) => createOrGet(user, 'team', line[orders.team], Team, cb)
         ], function() {
@@ -116,9 +121,11 @@ userController.processCSV = function(file_path, cb) {
           user.save(function(err) {
             if (err) console.log(err)
           });
-        })
-      })
-      cb(null, "Process ended");
+          cb();
+        });
+      }, function(err) {
+        cb(null, "Process ended");
+      });
     } else {
       console.log("There's something wrong in the csv");
       cb(null, "There's something wrong in the csv");
@@ -129,7 +136,7 @@ userController.processCSV = function(file_path, cb) {
     var stream = fs.createReadStream(file_path).pipe(parser);
   } else {
     console.log("File invalid");
-    cb('File invalid', null)
+    cb('File invalid', null);
   }
 } 
 

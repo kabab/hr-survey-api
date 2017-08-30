@@ -7,6 +7,8 @@ var async = require('async');
 var url = require('url');
 var Result = require('../model/Result');
 
+var mongoose = require('mongoose');
+
 var surveyController = {};
 
 
@@ -289,7 +291,7 @@ surveyController.getRatings = function(req, res) {
   })
 }
 
-surveyController.result = function(req, res) {
+surveyController.sendResult = function(req, res) {
   var survey_id = req.params.id;
   var user = req.user;
 
@@ -301,6 +303,8 @@ surveyController.result = function(req, res) {
     }),
     function(cb) {
       Result.findOne({  survey: survey_id,  employee: user.id }, function(err, res) {
+        console.log(user.id);
+        console.log(res);
         if (res) return cb({error: true, message: "Already submitted survey"}, null);
         else cb(null, 'not found')
       })
@@ -316,6 +320,114 @@ surveyController.result = function(req, res) {
       return res.json(result);
     });
   });
+}
+
+surveyController.getResult = function(req, res) {
+  var survey_id = req.params.id;
+  var user = req.user;
+
+  Result
+    .find({survey: survey_id})
+    .populate("employee survey")
+    .exec((err, results) => res.json(err ? err : results));
+}
+
+
+const lookup = (from, localField, foreignField, as) => ({
+  $lookup: { from, localField, foreignField, as }
+})
+
+const unwind = ($unwind) => ({ $unwind })
+
+surveyController.motivationResult = function(req, res) {
+  var user = req.user;
+  var url_parts = url.parse(req.url, true);
+  var query = url_parts.query;
+
+  var pipeline = [];
+
+  if (query.survey_id && mongoose.Types.ObjectId.isValid(query.survey_id)) {
+    pipeline.push({
+      $match: {
+        survey: mongoose.Types.ObjectId(query.survey_id)
+      }
+    });
+  }
+
+  pipeline = pipeline.concat([
+    lookup('users', 'employee', '_id', 'employee'),
+    unwind("$employee"),
+    lookup('positions', 'employee.position', '_id', 'position'),
+    unwind("$position"),
+    lookup('teams', 'employee.team', '_id', 'team'),
+    unwind("$team"),
+    lookup('surveys', 'survey', '_id', 'survey'),
+    unwind("$survey"),
+    unwind("$answers"),
+    {
+      $project: {
+          "employee_id": "$employee._id",
+          "survey_id": "$survey._id",
+          "survey_date": "$survey.startAt",
+          "position": "$position.title",
+          "team": "$team.title",
+          "answers.answer.weight": 1
+      }
+    }
+  ]);
+
+  var group = {
+    $group : {
+      _id: {
+        survey: "$survey_id",
+        survey_date: "$survey_date",
+      },
+      avg: { 
+        $avg: "$answers.answer.weight"
+      }
+    }
+  };
+
+  if (query.by && /^team|position$/i.test(query.by))
+    group.$group._id.team = "$" + query.by.toLowerCase();
+
+  pipeline.push(group);
+  pipeline.push({
+    $project: {
+        "_id": 0,
+        "survey_id": "$_id.survey",
+        "survey_date": "$_id.survey_date",
+        "team": "$_id.team",
+        "position": "$_id.position",
+        "avg": 1
+    }
+  })
+
+  // TODO: check if admin
+  Result
+    .aggregate(pipeline)
+    .exec( (err, results) => res.json(err ? err : results))
+
+  // {
+  //   $group: {
+  //       _id: {
+  //         survey_id: "$survey._id",
+  //         position: "$position.title"
+  //       },
+  //       avg: { $avg: "$answers.answer.weight" }
+  //   }
+  // }
+
+  // By survey
+  // By teams
+  // By position
+}
+
+
+surveyController.motivationLine = function(req, res) {
+  // By survey
+  // By teams
+  // By position
 }
 
 module.exports = surveyController;

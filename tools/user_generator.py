@@ -26,6 +26,6 @@ for i in range(num):
     firstName = random_name()
     lastName = random_name()
     email = random_name() + '@gmail.com'
-    team = random.choice(POSITION)
-    position = random.choice(TEAMS)
+    team = random.choice(TEAMS)
+    position = random.choice(POSITION)
     print "%s, %s, %s, %s, %s" % (firstName, lastName, email, team, position)
