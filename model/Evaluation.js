@@ -15,7 +15,8 @@ var RateSchema = new Schema({
 var EvaluationSchema = new Schema({
   createdAt: {type: Date, default: Date.now},
   ratings: [RateSchema],
-  employee: {type: Schema.Types.ObjectId, ref: 'User'}
+  employee: {type: Schema.Types.ObjectId, ref: 'User'},
+  survey: {type: Schema.Types.ObjectId, ref: 'Survey'}
 });
 
 module.exports = mongoose.model('Evaluation', EvaluationSchema);

@@ -244,9 +244,10 @@ surveyController.rateUser = function(req, res) {
         })
       }, function(evaluation, cb) { // Update or create the evaluation
         // TODO: I need to check if the employee can rate the subject employee
+        console.log(evaluation);
         if (!evaluation) {
-          evaluation = new Evaluation({ employee: user_id});
-          evaluation.save(cb)
+          evaluation = new Evaluation({ employee: user_id, survey: _survey._id});
+          evaluation.save((err, evaluation) => cb(null, evaluation))
         } else {
           cb(null, evaluation)
         }
@@ -266,6 +267,7 @@ surveyController.rateUser = function(req, res) {
     if (err)
       return res.json(err);
     if (_survey.evaluations.indexOf(results._id) < 0) {
+      console.log(_survey.evaluations);
       _survey.evaluations.push(results._id);
       _survey.save(function(err, s) {
         if (err)
@@ -277,7 +279,6 @@ surveyController.rateUser = function(req, res) {
     }
   })
 }
-
 
 surveyController.getRatings = function(req, res) {
   var survey_id = req.params.id;
@@ -332,12 +333,113 @@ surveyController.getResult = function(req, res) {
     .exec((err, results) => res.json(err ? err : results));
 }
 
-
 const lookup = (from, localField, foreignField, as) => ({
   $lookup: { from, localField, foreignField, as }
 })
 
-const unwind = ($unwind) => ({ $unwind })
+const unwind = ($unwind) => ({ $unwind: { path: $unwind, preserveNullAndEmptyArrays: true } })
+
+
+surveyController.s360Result = function(req, res) {
+  var survey_id = req.params.id;
+  var url_parts = url.parse(req.url, true);
+  var query = url_parts.query;
+
+  var pipeline = [];
+
+  if (query.survey_id && mongoose.Types.ObjectId.isValid(query.survey_id)) {
+    pipeline.push({
+      $match: {
+        survey: mongoose.Types.ObjectId(query.survey_id)
+      }
+    });
+  }
+
+  pipeline = pipeline.concat([
+    unwind('$ratings'),
+    lookup('users', 'ratings.employee', '_id', 'employee'),
+    unwind('$employee'),
+    lookup('teams', 'employee.team', '_id', 'team'),
+    lookup('positions', 'employee.position', '_id', 'position'),
+    lookup('surveys', 'survey', '_id', 'survey'),
+    unwind('$position'),
+    unwind('$team'),
+    unwind('$survey')
+  ]);
+
+  var group = {
+    $group: {
+      _id: {
+        employee: "$ratings.employee",
+        rateCategory: "$ratings.rateCategory",
+        name: {
+          firstName: "$employee.firstName",
+          lastName: "$employee.lastName"
+        }
+      },
+      avg: {
+        $avg: "$ratings.rate"
+      },
+      max: {
+        $max: "$ratings.rate"
+      },
+      min: {
+        $min: "$ratings.rate"
+      }     
+    }
+  }
+
+  // if (query.by && /^team|position$/i.test(query.by))
+  //   group.$group._id[query.by.toLowerCase()] = "$" + query.by.toLowerCase();
+
+  pipeline.push(group);
+  //
+  pipeline = pipeline.concat([
+    {
+      $group: {
+        _id: {
+          employee: "$_id.employee",
+          name: {
+            firstName: "$_id.name.firstName",
+            lastName: "$_id.name.lastName"
+          }
+        },
+        ratings: {
+          $push: "$$ROOT"
+        }
+      }
+    },
+    {
+      $project: {
+        "_id": false,
+        "employee_id": "$_id.employee",
+        "firstName": "$_id.name.firstName",
+        "lastName": "$_id.name.lastName",
+        "ratings": {
+          "$map": {
+            "input": "$ratings",
+            "as": "el",
+            "in": {
+              "rateCategory": "$$el._id.rateCategory",
+              "avg": "$$el.avg",
+              "min": "$$el.min",
+              "max": "$$el.max"
+            }
+          }
+        }
+      }
+    }
+  ])
+
+
+  Evaluation
+    .aggregate(pipeline)
+    .exec((err, results) => res.json(err ? err : results))
+}
+
+/*************************/
+
+
 
 surveyController.motivationResult = function(req, res) {
   var user = req.user;
@@ -389,7 +491,7 @@ surveyController.motivationResult = function(req, res) {
   };
 
   if (query.by && /^team|position$/i.test(query.by))
-    group.$group._id.team = "$" + query.by.toLowerCase();
+    group.$group._id[query.by.toLowerCase()] = "$" + query.by.toLowerCase();
 
   pipeline.push(group);
   pipeline.push({
@@ -423,6 +525,33 @@ surveyController.motivationResult = function(req, res) {
   // By position
 }
 
+
+surveyController.surveyResults = function(req, res) {
+  var user = req.user;
+  var url_parts = url.parse(req.url, true);
+  var query = url_parts.query;
+
+  switch(query.type) {
+    case "360":
+      return surveyController.s360Result(req, res);
+    case "motivation":
+      return surveyController.motivationResult(req, res);
+    default:
+      return res.sendStatus(404);
+  }
+}
+
+surveyController.getRatings = function(req, res) {
+  var survey_id = req.params.id;
+  var user_id = req.user.id;
+
+  Survey.findById(survey_id).populate("evaluations").exec(function(err, survey) {
+    if (err)
+      return res.json(err);
+    survey.evaluations = survey.evaluations.filter((e) => e.employee == user_id);
+    return res.json(survey);
+  })
+}
 
 surveyController.motivationLine = function(req, res) {
   // By survey
