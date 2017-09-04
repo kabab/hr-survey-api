@@ -229,4 +229,14 @@ userController.deleteEmployee = function(req, res) {
   });
 }
 
+userController.getEmployee = function(req, res) {
+  var id = req.params.id;
+
+  User
+    .findById(id)
+    .populate("team position")
+    .exec((err, employee) => res.json(err ? err : employee));
+
+}
+
 module.exports = userController;
