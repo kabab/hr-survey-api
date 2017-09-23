@@ -1,0 +1,29 @@
+==== BACK =====
+- Mailing service
+- Reminder
+- Show users who did not finish the survey
+- Remind users
+- Motivation survey
+	* overall result by team (regouping all topics)
+	* results per topic for one team
+	* result per topic for one person
+- 360 survey
+	* get user own result (how he rated himself)
+	* show comments
+- NGINX LAYER
+
+
+==== FRONT ====
+- create user by admin
+- login screen
+- implement sucurity rules
+- add BI screen 
+- mail settings (template, time rule)
+- in survey creation, enable/disable mail sending
+- Motivation survey
+	* overall result by team (regouping all topics)
+	* results per topic for one team
+	* result per topic for one person
+- 360 survey
+	* get user own result (how he rated himself)
+	* show comments

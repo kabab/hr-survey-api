@@ -367,10 +367,11 @@ surveyController.s360Result = function(req, res) {
     unwind('$survey')
   ]);
 
-  var group = {
+  var group1 = {
     $group: {
       _id: {
         employee: "$ratings.employee",
+        // survey: "$survey",
         rateCategory: "$ratings.rateCategory",
         name: {
           firstName: "$employee.firstName",
@@ -391,14 +392,14 @@ surveyController.s360Result = function(req, res) {
 
   // if (query.by && /^team|position$/i.test(query.by))
   //   group.$group._id[query.by.toLowerCase()] = "$" + query.by.toLowerCase();
-
-  pipeline.push(group);
+  
   //
-  pipeline = pipeline.concat([
+  var group2 = [
     {
       $group: {
         _id: {
           employee: "$_id.employee",
+          // survey: "$_id.survey",
           name: {
             firstName: "$_id.name.firstName",
             lastName: "$_id.name.lastName"
@@ -415,6 +416,7 @@ surveyController.s360Result = function(req, res) {
         "employee_id": "$_id.employee",
         "firstName": "$_id.name.firstName",
         "lastName": "$_id.name.lastName",
+        // "survey": "$_id.survey",
         "ratings": {
           "$map": {
             "input": "$ratings",
@@ -429,8 +431,19 @@ surveyController.s360Result = function(req, res) {
         }
       }
     }
-  ])
+  ]
 
+  if (!query.all) {
+    group1['$group']['_id']['survey'] = '$survey';
+    group2[0]['$group']['_id']['survey'] = '$_id.survey';
+    group2[1]['$project']['survey_title'] = '$_id.survey.title';     
+    group2[1]['$project']['survey_start_at'] = '$_id.survey.startAt';     
+    group2[1]['$project']['survey_end_at'] = '$_id.survey.endAt';     
+    group2[1]['$project']['survey_state'] = '$_id.survey.state';     
+  }
+
+  pipeline.push(group1);
+  pipeline = pipeline.concat(group2);
 
   Evaluation
     .aggregate(pipeline)
